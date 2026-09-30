@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌲 SeaFunDoo • Seattle Family Trail Concierge</title>
+  <!-- Google Fonts & Leaflet OpenStreetMap CDN (free, beautiful, reliable map) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <style>
+    :root {
+      --moss-900: #1c3326;
+      --moss-800: #234333;
+      --moss-700: #2e5944;
+      --forest-600: #3b7558;
+      --forest-500: #4a9370;
+      --sage-300: #a7cfb9;
+      --sage-100: #e2ede6;
+      --sage-50: #f4f8f5;
+      --earth-wood: #8c7853;
+      --earth-sand: #f5f3ef;
+      --surface: #ffffff;
+      --border: #d7e4dc;
+      --text-main: #1d2b23;
+      --text-muted: #53695d;
+      --accent-badge: #e8f5ee;
+      --shadow: 0 4px 16px rgba(28, 51, 38, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--sage-50);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--moss-900) 0%, var(--moss-800) 100%);
+      color: #fff;
+      padding: 0.9rem 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--forest-500);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-tag {
+      background: rgba(255,255,255,0.15);
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--sage-300);
+    }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--sage-300);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #4ade80;
+    }
+
+    /* Main Split Layout */
+    .app-container {
+      display: grid;
+      grid-template-columns: 520px 1fr;
+      flex: 1;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* Left Panel: Map & Trail Facts / Highlights / Tips */
+    .left-panel {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.03);
+      scrollbar-width: thin;
+      scrollbar-color: var(--forest-500) var(--sage-100);
+    }
+
+    .left-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    .left-panel::-webkit-scrollbar-track {
+      background: var(--sage-50);
+    }
+    .left-panel::-webkit-scrollbar-thumb {
+      background: var(--forest-500);
+      border-radius: 4px;
+    }
+    .left-panel::-webkit-scrollbar-thumb:hover {
+      background: var(--moss-700);
+    }
+
+    /* Interactive Map Container */
+    .map-section {
+      width: 100%;
+      height: 380px;
+      min-height: 380px;
+      flex-shrink: 0;
+      background: #e5ece8;
+      position: relative;
+      border-bottom: 2px solid var(--border);
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
+    .map-overlay-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 500;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(4px);
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--moss-800);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Trail Selector Pills */
+    .trail-selector-bar {
+      padding: 0.75rem 1rem;
+      background: var(--sage-50);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: thin;
+      flex-shrink: 0;
+    }
+    .trail-pill {
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .trail-pill:hover {
+      border-color: var(--forest-500);
+      color: var(--forest-600);
+    }
+    .trail-pill.active {
+      background: var(--forest-600);
+      color: #fff;
+      border-color: var(--forest-600);
+      box-shadow: 0 2px 6px rgba(59, 117, 88, 0.3);
+    }
+
+    /* Trail Details Card */
+    .trail-content {
+      padding: 1.25rem 1.25rem 3.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .trail-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--moss-900);
+      line-height: 1.2;
+    }
+    .trail-subtitle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* Quick Facts Grid */
+    .facts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+    }
+    .fact-card {
+      background: var(--sage-50);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .fact-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .fact-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--moss-800);
+    }
+
+    /* Highlights & Tips Cards */
+    .section-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--moss-800);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .bullet-list li {
+      position: relative;
+      padding-left: 1.3rem;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      color: var(--text-main);
+    }
+    .bullet-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0.4rem;
+      color: var(--forest-500);
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+    .tips-card {
+      background: #fbf8f2;
+      border: 1px solid #ebd9bf;
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+    .tips-card .section-title {
+      color: #79552a;
+    }
+    .tips-card .bullet-list li::before {
+      color: #9c6c37;
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--forest-600);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(59, 117, 88, 0.25);
+      transition: background 0.2s;
+    }
+    .nav-btn:hover {
+      background: var(--moss-700);
+    }
+
+    /* Right Panel: Chat Assistant */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--earth-sand);
+    }
+    .chat-header {
+      padding: 0.85rem 1.25rem;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .chat-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--moss-900);
+    }
+    .chat-history {
+      flex: 1;
+      min-height: 0;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      padding: 1.25rem 1.25rem 2.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--forest-500) var(--sage-100);
+    }
+
+    .chat-history::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chat-history::-webkit-scrollbar-track {
+      background: var(--earth-sand);
+    }
+    .chat-history::-webkit-scrollbar-thumb {
+      background: var(--forest-500);
+      border-radius: 4px;
+    }
+    .chat-history::-webkit-scrollbar-thumb:hover {
+      background: var(--moss-700);
+    }
+
+    .msg {
+      max-width: 84%;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--forest-600);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .msg.agent {
+      align-self: flex-start;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      white-space: pre-wrap;
+    }
+    .msg.agent strong {
+      color: var(--moss-900);
+    }
+
+    /* Chat Input Bar */
+    .chat-input-bar {
+      padding: 0.9rem 1.25rem;
+      background: #fff;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.6rem;
+      flex-shrink: 0;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .chat-input:focus {
+      border-color: var(--forest-600);
+    }
+    .send-btn {
+      padding: 0.75rem 1.3rem;
+      background: var(--forest-600);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .send-btn:hover {
+      background: var(--moss-700);
+    }
+
+    /* Quick Prompt Chips */
+    .quick-chips {
+      padding: 0.4rem 1.25rem;
+      background: #fff;
+      border-top: 1px solid var(--sage-100);
+      display: flex;
+      gap: 0.45rem;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .chip {
+      background: var(--sage-50);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.65rem;
+      border-radius: 14px;
+      font-size: 0.75rem;
+      color: var(--forest-600);
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip:hover {
+      background: var(--sage-100);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <span class="material-symbols-outlined" style="font-size: 26px; color: var(--sage-300);">forest</span>
+      <h1>SeaFunDoo</h1>
+      <span class="brand-tag">Seattle Family Trail Concierge</span>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span>ADK Agent Connected</span>
+    </div>
+  </header>
+
+  <div class="app-container">
+    
+    <!-- Left Panel: Map & Trail Facts / Highlights / Tips -->
+    <div class="left-panel">
+      
+      <!-- Interactive OpenStreetMap (Free, smooth, responsive) -->
+      <div class="map-section">
+        <div id="map"></div>
+        <div class="map-overlay-badge" id="map-indicator">
+          <span class="material-symbols-outlined" style="font-size: 16px;">location_on</span>
+          <span id="badge-trail-name">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Quick Trail Selector -->
+      <div class="trail-selector-bar" id="trail-selector"></div>
+
+      <!-- Dynamic Trail Details & Facts -->
+      <div class="trail-content" id="trail-content">
+        <div class="trail-header">
+          <h2 id="trail-title">Select a Trail</h2>
+          <div class="trail-subtitle" id="trail-location">
+            <span class="material-symbols-outlined" style="font-size: 16px;">explore</span>
+            <span>Greater Seattle Area</span>
+          </div>
+        </div>
+
+        <!-- Quick Facts -->
+        <div class="facts-grid">
+          <div class="fact-card">
+            <span class="fact-label">Length</span>
+            <span class="fact-val" id="fact-distance">--</span>
+          </div>
+          <div class="fact-card">
+            <span class="fact-label">Elevation Gain</span>
+            <span class="fact-val" id="fact-elevation">--</span>
+          </div>
+          <div class="fact-card">
+            <span class="fact-label">Difficulty</span>
+            <span class="fact-val" id="fact-difficulty">--</span>
+          </div>
+          <div class="fact-card">
+            <span class="fact-label">Stroller Friendly</span>
+            <span class="fact-val" id="fact-stroller">--</span>
+          </div>
+          <div class="fact-card">
+            <span class="fact-label">Pass Required</span>
+            <span class="fact-val" id="fact-pass" style="font-size: 0.85rem;">--</span>
+          </div>
+          <div class="fact-card">
+            <span class="fact-label">Dog Friendly</span>
+            <span class="fact-val" id="fact-dogs">--</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <div class="section-title">
+            <span class="material-symbols-outlined" style="font-size: 18px;">info</span>
+            About This Trail
+          </div>
+          <p id="trail-desc" style="font-size: 0.88rem; line-height: 1.5; color: var(--text-main);"></p>
+        </div>
+
+        <!-- Highlights -->
+        <div>
+          <div class="section-title">
+            <span class="material-symbols-outlined" style="font-size: 18px;">star</span>
+            Family Highlights
+          </div>
+          <ul class="bullet-list" id="trail-highlights"></ul>
+        </div>
+
+        <!-- Family Tips Card -->
+        <div class="tips-card">
+          <div class="section-title">
+            <span class="material-symbols-outlined" style="font-size: 18px;">lightbulb</span>
+            Family & Kid Tips
+          </div>
+          <ul class="bullet-list" id="trail-tips">
+            <li>Pack extra dry socks, lightweight rain jackets, and kid-friendly snacks.</li>
+            <li>Restrooms and water availability can vary; check Visitor Centers on arrival.</li>
+          </ul>
+        </div>
+
+        <!-- Direct Navigation Link -->
+        <a id="nav-btn" href="#" target="_blank" class="nav-btn">
+          <span class="material-symbols-outlined" style="font-size: 18px;">directions</span>
+          Open in Google Maps Navigation
+        </a>
+
+      </div>
+    </div>
+
+    <!-- Right Panel: Chat Assistant -->
+    <div class="right-panel">
+      <div class="chat-header">
+        <h3>💬 Ask the Trail Concierge</h3>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">Itineraries, Packing, Toddlers, & Weather</span>
+      </div>
+
+      <div class="chat-history" id="chat-history">
+        <div class="msg agent">
+          🌲 <strong>Hello! I'm SeaFunDoo, your Seattle Family Trail Concierge.</strong>
+          <br><br>
+          Click any trail on the left panel to inspect its interactive map, elevation, stroller accessibility, and family highlights! Or ask me below:
+          <br>• <em>"Plan a morning trip to Discovery Park for a 4yo and 7yo"</em>
+          <br>• <em>"What's the best stroller-friendly hike in South Seattle?"</em>
+          <br>• <em>"Is Rattlesnake Ledge safe for elementary school kids?"</em>
+        </div>
+      </div>
+
+      <!-- Quick Prompt Suggestions -->
+      <div class="quick-chips">
+        <button class="chip" onclick="sendQuick('Plan a family morning trip to Discovery Park with a 5yo')">👶 Discovery Park Itinerary</button>
+        <button class="chip" onclick="sendQuick('Show me all stroller-friendly trails in Seattle')">🛒 Stroller-Friendly</button>
+        <button class="chip" onclick="sendQuick('What are the quick facts and safety tips for Rattlesnake Ledge?')">⛰️ Rattlesnake Ledge</button>
+        <button class="chip" onclick="sendQuick('What is the weather in Seattle for hiking today?')">🌤️ Weather Forecast</button>
+      </div>
+
+      <!-- Chat Input Form -->
+      <form class="chat-input-bar" id="chat-form">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Ask for custom family timelines, toddler gear, or directions..." autocomplete="off">
+        <button type="submit" class="send-btn">
+          <span>Send</span>
+          <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    let trails = [];
+    let map = null;
+    let markers = {};
+    let currentTrail = null;
+
+    // Initialize Leaflet Map
+    function initMap() {
+      // Centered on Greater Seattle area
+      map = L.map('map', { zoomControl: true }).setView([47.6062, -122.3321], 10);
+      
+      // Clean, outdoor-friendly OpenStreetMap tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+    }
+
+    // Load trails data from API
+    async function loadTrails() {
+      try {
+        const res = await fetch('/api/trails');
+        trails = await res.json();
+        
+        renderPills();
+        plotMarkers();
+        
+        // Select first trail (Discovery Park) by default
+        if (trails.length > 0) {
+          selectTrail(trails[0]);
+        }
+      } catch (err) {
+        console.error('Failed to load trails:', err);
+      }
+    }
+
+    // Render selector pills
+    function renderPills() {
+      const container = document.getElementById('trail-selector');
+      container.innerHTML = '';
+      trails.forEach((trail, idx) => {
+        const pill = document.createElement('button');
+        pill.className = `trail-pill ${idx === 0 ? 'active' : ''}`;
+        pill.textContent = trail.name.replace(" Trail", "").replace(" Perimeter", "");
+        pill.onclick = () => selectTrail(trail);
+        container.appendChild(pill);
+      });
+    }
+
+    // Add map markers for all trails
+    function plotMarkers() {
+      trails.forEach(trail => {
+        if (!trail.coordinates) return;
+        const marker = L.marker([trail.coordinates.lat, trail.coordinates.lng]).addTo(map);
+        marker.bindPopup(`<b>${trail.name}</b><br>${trail.distance_miles} mi • ${trail.difficulty}`);
+        marker.on('click', () => selectTrail(trail));
+        markers[trail.name] = marker;
+      });
+    }
+
+    // Select and display trail in the left panel
+    function selectTrail(trail) {
+      currentTrail = trail;
+      
+      // Update pills
+      document.querySelectorAll('.trail-pill').forEach(pill => {
+        pill.classList.toggle('active', pill.textContent === trail.name.replace(" Trail", "").replace(" Perimeter", ""));
+      });
+
+      // Update map view & popup
+      if (trail.coordinates && map) {
+        map.flyTo([trail.coordinates.lat, trail.coordinates.lng], 13, { duration: 1.2 });
+        if (markers[trail.name]) {
+          markers[trail.name].openPopup();
+        }
+      }
+
+      // Update Header & Badge
+      document.getElementById('badge-trail-name').textContent = trail.name;
+      document.getElementById('trail-title').textContent = trail.name;
+      document.getElementById('trail-location').innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 16px;">explore</span>
+        <span>${trail.location}</span>
+      `;
+
+      // Update Quick Facts
+      document.getElementById('fact-distance').textContent = `${trail.distance_miles} miles`;
+      document.getElementById('fact-elevation').textContent = `${trail.elevation_gain_ft} ft`;
+      document.getElementById('fact-difficulty').textContent = trail.difficulty;
+      document.getElementById('fact-stroller').textContent = trail.stroller_friendly ? "✅ Yes" : "❌ No";
+      document.getElementById('fact-pass').textContent = trail.pass_required;
+      document.getElementById('fact-dogs').textContent = trail.dog_friendly ? "🐾 Yes (On leash)" : "No";
+
+      // Description & Highlights
+      document.getElementById('trail-desc').textContent = trail.description;
+      
+      const highlightsEl = document.getElementById('trail-highlights');
+      highlightsEl.innerHTML = '';
+      (trail.highlights || []).forEach(h => {
+        const li = document.createElement('li');
+        li.textContent = h;
+        highlightsEl.appendChild(li);
+      });
+
+      // Kid & Family Tips
+      const tipsEl = document.getElementById('trail-tips');
+      tipsEl.innerHTML = '';
+      const tips = [
+        trail.stroller_friendly 
+          ? "Stroller Friendly: Great for rugged strollers, wagons, and balance bikes." 
+          : "Not Stroller Friendly: Recommend a child carrier backpack for kids under 4.",
+        `Best For: ${trail.best_for || "All families and kids."}`,
+        "Pack emergency high-protein snacks, water bottles, and weather layers."
+      ];
+      tips.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        tipsEl.appendChild(li);
+      });
+
+      // Google Maps Nav Link
+      const navBtn = document.getElementById('nav-btn');
+      navBtn.href = trail.map_url || `https://maps.google.com/?q=${encodeURIComponent(trail.name + " " + trail.location)}`;
+    }
+
+    // Chat handling
+    const chatHistory = document.getElementById('chat-history');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+
+    function appendMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.className = `msg ${sender}`;
+      msg.textContent = text;
+      chatHistory.appendChild(msg);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+      return msg;
+    }
+
+    async function handleChat(promptText) {
+      const q = promptText || chatInput.value.trim();
+      if (!q) return;
+
+      if (!promptText) chatInput.value = '';
+      appendMessage(q, 'user');
+
+      // Loading bubble
+      const loadingMsg = appendMessage('🌲 Thinking and checking trail details...', 'agent');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: q })
+        });
+        const data = await res.json();
+        loadingMsg.textContent = data.reply;
+      } catch (err) {
+        loadingMsg.textContent = "Sorry, couldn't reach the agent right now. Please try again!";
+      }
+    }
+
+    chatForm.onsubmit = (e) => {
+      e.preventDefault();
+      handleChat();
+    };
+
+    function sendQuick(text) {
+      handleChat(text);
+    }
+
+    // Initialize
+    window.onload = () => {
+      initMap();
+      loadTrails();
+    };
+  </script>
+</body>
+</html>
