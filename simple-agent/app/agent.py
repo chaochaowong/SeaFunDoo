@@ -23,6 +23,7 @@ from google.adk.models import Gemini
 from google.genai import types
 
 from .trails_data import TRAILS_DB
+from .restaurants_data import get_nearby_restaurants, NEARBY_RESTAURANTS
 from .firestore_db import (
     get_all_trails_from_firestore,
     get_trail_by_name_from_firestore,
@@ -249,6 +250,23 @@ def plan_family_trail_trip(
     }
 
 
+def recommend_nearby_restaurants(trail_or_city: str) -> Dict[str, Any]:
+    """Recommend family-friendly restaurants, bakeries, cafes, and ice cream shops near a trail or neighborhood.
+
+    Args:
+        trail_or_city: The trail name or neighborhood (e.g., 'Discovery Park', 'Twin Falls', 'Seward Park', 'Rattlesnake Ledge', 'North Bend', 'Magnolia').
+
+    Returns:
+        A list of recommended eateries with cuisine, vibe, kid-friendly perks, and Google Maps directions links.
+    """
+    eateries = get_nearby_restaurants(trail_or_city)
+    return {
+        "destination": trail_or_city,
+        "recommendations": eateries,
+        "tip": "Call ahead or check hours for weekend brunch/post-hike lunch rushes!"
+    }
+
+
 def get_weather(query: str) -> str:
     """Get current weather conditions and outdoor recreation forecast.
 
@@ -295,11 +313,12 @@ Key capabilities:
 1. Search and query trails backed by Google Cloud Firestore (`seattle_trails` collection).
 2. Save new community or user-recommended family trails into Firestore (`add_custom_trail_record`).
 3. Look up detailed trail specifications, parking pass requirements, and interactive maps.
-4. Provide direct Google Maps navigation links and embeddable map links whenever discussing or planning a trail trip so families can easily navigate there.
-5. Build practical, realistic family trip itineraries including packing checklists, rest stops, and timing.
-6. Provide local Pacific Northwest weather and recreation advice.
+4. Recommend family-friendly restaurants, diners, cafes, and ice cream shops near trailheads (`recommend_nearby_restaurants`).
+5. Provide direct Google Maps navigation links and embeddable map links whenever discussing or planning a trail trip so families can easily navigate there.
+6. Build practical, realistic family trip itineraries including packing checklists, rest stops, meal breaks, and timing.
+7. Provide local Pacific Northwest weather and recreation advice.
 
-Always include the trail location and a clickable Google Maps link in your recommendations so users can view the map immediately.
+Always include the trail or restaurant location and a clickable Google Maps link in your recommendations so users can view the map immediately.
 """,
     tools=[
         search_seattle_trails,
@@ -308,6 +327,7 @@ Always include the trail location and a clickable Google Maps link in your recom
         add_custom_trail_record,
         get_trail_map,
         plan_family_trail_trip,
+        recommend_nearby_restaurants,
         get_weather,
         get_current_time
     ],

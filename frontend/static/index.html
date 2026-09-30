@@ -284,6 +284,83 @@
     .tips-card .section-title {
       color: #79552a;
     }
+
+    /* Restaurants Section */
+    .restaurant-card {
+      background: #f7faf8;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .restaurant-item {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      transition: all 0.2s;
+    }
+    .restaurant-item:hover {
+      border-color: var(--forest-500);
+      box-shadow: 0 2px 6px rgba(59, 117, 88, 0.1);
+    }
+    .restaurant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .restaurant-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--moss-900);
+    }
+    .restaurant-dist {
+      font-size: 0.72rem;
+      color: var(--forest-600);
+      font-weight: 600;
+      background: var(--sage-50);
+      padding: 0.15rem 0.45rem;
+      border-radius: 10px;
+    }
+    .restaurant-cuisine {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .restaurant-vibe {
+      font-size: 0.8rem;
+      color: var(--text-main);
+      line-height: 1.35;
+    }
+    .restaurant-kid {
+      font-size: 0.76rem;
+      color: #79552a;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: #fff8eb;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      margin-top: 0.15rem;
+    }
+    .restaurant-nav {
+      font-size: 0.75rem;
+      color: var(--forest-600);
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      margin-top: 0.2rem;
+    }
+    .restaurant-nav:hover {
+      text-decoration: underline;
+    }
     .tips-card .bullet-list li::before {
       color: #9c6c37;
     }
@@ -550,6 +627,15 @@
           </ul>
         </div>
 
+        <!-- Nearby Restaurants & Treats Section -->
+        <div class="restaurant-card">
+          <div class="section-title">
+            <span class="material-symbols-outlined" style="font-size: 18px;">restaurant</span>
+            Nearby Family Food & Post-Hike Treats
+          </div>
+          <div id="trail-restaurants" style="display: flex; flex-direction: column; gap: 0.55rem;"></div>
+        </div>
+
         <!-- Direct Navigation Link -->
         <a id="nav-btn" href="#" target="_blank" class="nav-btn">
           <span class="material-symbols-outlined" style="font-size: 18px;">directions</span>
@@ -579,9 +665,10 @@
 
       <!-- Quick Prompt Suggestions -->
       <div class="quick-chips">
+        <button class="chip" onclick="sendQuick('What are the best kid-friendly restaurants and bakeries near Discovery Park?')">🍔 Nearby Food & Treats</button>
         <button class="chip" onclick="sendQuick('Plan a family morning trip to Discovery Park with a 5yo')">👶 Discovery Park Itinerary</button>
         <button class="chip" onclick="sendQuick('Show me all stroller-friendly trails in Seattle')">🛒 Stroller-Friendly</button>
-        <button class="chip" onclick="sendQuick('What are the quick facts and safety tips for Rattlesnake Ledge?')">⛰️ Rattlesnake Ledge</button>
+        <button class="chip" onclick="sendQuick('What are good post-hike lunch spots near Twin Falls?')">🥧 Twin Falls Dining</button>
         <button class="chip" onclick="sendQuick('What is the weather in Seattle for hiking today?')">🌤️ Weather Forecast</button>
       </div>
 
@@ -716,6 +803,36 @@
         li.textContent = t;
         tipsEl.appendChild(li);
       });
+
+      // Nearby Family Food & Treats
+      const restEl = document.getElementById('trail-restaurants');
+      restEl.innerHTML = '';
+      const spots = trail.restaurants || [];
+      if (spots.length === 0) {
+        restEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">Ask the concierge on the right for nearby cafes and bakeries!</div>';
+      } else {
+        spots.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'restaurant-item';
+          item.innerHTML = `
+            <div class="restaurant-header">
+              <span class="restaurant-name">${r.name}</span>
+              <span class="restaurant-dist">${r.distance}</span>
+            </div>
+            <div class="restaurant-cuisine">${r.cuisine}</div>
+            <div class="restaurant-vibe">${r.vibe}</div>
+            <div class="restaurant-kid">
+              <span class="material-symbols-outlined" style="font-size: 14px;">child_care</span>
+              <span>${r.kid_friendly}</span>
+            </div>
+            <a href="${r.maps_url}" target="_blank" class="restaurant-nav">
+              <span class="material-symbols-outlined" style="font-size: 14px;">directions</span>
+              Directions on Maps
+            </a>
+          `;
+          restEl.appendChild(item);
+        });
+      }
 
       // Google Maps Nav Link
       const navBtn = document.getElementById('nav-btn');

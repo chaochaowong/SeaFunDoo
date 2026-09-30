@@ -24,11 +24,13 @@ AGENT_DIR = Path("/config/Desktop/BuildWithGemini/simple-agent")
 sys.path.insert(0, str(AGENT_DIR))
 
 from app.trails_data import TRAILS_DB
+from app.restaurants_data import get_nearby_restaurants
 from app.agent import (
     search_seattle_trails,
     get_trail_details,
     get_trail_map,
     plan_family_trail_trip,
+    recommend_nearby_restaurants,
     get_weather,
     root_agent,
 )
@@ -53,7 +55,13 @@ class ChatRequest(BaseModel):
 @app.get("/api/trails")
 def list_trails():
     """Return all available trails with metadata and coordinates."""
-    return TRAILS_DB
+    # Enhance each trail with nearby restaurants
+    enriched = []
+    for t in TRAILS_DB:
+        t_copy = dict(t)
+        t_copy["restaurants"] = get_nearby_restaurants(t["name"])
+        enriched.append(t_copy)
+    return enriched
 
 @app.get("/api/trails/{trail_name}")
 def trail_details(trail_name: str):
@@ -61,7 +69,13 @@ def trail_details(trail_name: str):
     details = get_trail_details(trail_name)
     if "error" in details:
         raise HTTPException(status_code=404, detail=details["error"])
+    details["restaurants"] = get_nearby_restaurants(trail_name)
     return details
+
+@app.get("/api/restaurants/{trail_name}")
+def nearby_restaurants_endpoint(trail_name: str):
+    """Return family-friendly restaurant recommendations near a specific trail."""
+    return {"trail": trail_name, "restaurants": get_nearby_restaurants(trail_name)}
 
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
