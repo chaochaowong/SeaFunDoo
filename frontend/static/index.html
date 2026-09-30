@@ -871,6 +871,16 @@
         });
         const data = await res.json();
         loadingMsg.textContent = data.reply;
+
+        // Automatically update the left panel map & facts when a trail is recommended
+        if (data.recommended_trail) {
+          const targetTrail = trails.find(t => t.name.toLowerCase() === data.recommended_trail.toLowerCase());
+          if (targetTrail) {
+            selectTrail(targetTrail);
+            // Smoothly scroll the left panel to top so user sees the newly focused trail
+            document.querySelector('.left-panel').scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }
       } catch (err) {
         loadingMsg.textContent = "Sorry, couldn't reach the agent right now. Please try again!";
       }

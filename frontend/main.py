@@ -125,7 +125,27 @@ async def chat_endpoint(req: ChatRequest):
         else:
             reply_text = f"I'm here to help you plan your Seattle trail trip! Try selecting a trail on the left panel or asking about stroller-friendly walks, waterfall hikes, or Discovery Park."
 
-    return {"reply": reply_text}
+    # Identify if a specific trail was recommended or mentioned
+    matched_trail_name = None
+    u_lower = user_msg.lower()
+    r_lower = reply_text.lower()
+    
+    # 1. Check if user explicitly mentioned a trail
+    for t in TRAILS_DB:
+        name_clean = t["name"].lower().replace(" trail", "").replace(" perimeter", "").replace(" loop", "").strip()
+        if name_clean in u_lower or t["name"].lower() in u_lower:
+            matched_trail_name = t["name"]
+            break
+
+    # 2. If not in user query, check if agent response strongly highlights a specific trail
+    if not matched_trail_name:
+        for t in TRAILS_DB:
+            name_clean = t["name"].lower().replace(" trail", "").replace(" perimeter", "").replace(" loop", "").strip()
+            if f"**{t['name'].lower()}**" in r_lower or f"**{name_clean}**" in r_lower or f"### {t['name'].lower()}" in r_lower or name_clean in r_lower:
+                matched_trail_name = t["name"]
+                break
+
+    return {"reply": reply_text, "recommended_trail": matched_trail_name}
 
 # Mount static files
 STATIC_DIR = Path(__file__).parent / "static"
