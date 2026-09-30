@@ -141,5 +141,45 @@ TRAILS_DB = [
         ],
         "description": "A rich walk through mining history along bubbling Coal Creek. Kids love spotting remnants of old railways, mine shafts, and wooden bridge crossings.",
         "best_for": "Elementary-age kids, history lovers, shady creek walks"
+    },
+    {
+        "name": "Little Si Trail",
+        "location": "North Bend (I-90 Corridor)",
+        "distance_miles": 4.7,
+        "elevation_gain_ft": 1300,
+        "difficulty": "Moderate",
+        "stroller_friendly": False,
+        "dog_friendly": True,
+        "pass_required": "Washington Discover Pass",
+        "coordinates": {"lat": 47.4996, "lng": -121.7538},
+        "map_url": "https://maps.google.com/?q=Little+Si+Trailhead+North+Bend+WA",
+        "embed_map_url": "https://maps.google.com/maps?q=47.4996,-121.7538&z=14&output=embed",
+        "highlights": [
+            "Mossy boulder garden for kids to explore",
+            "Rocky summit with panoramic views of Snoqualmie Valley",
+            "Well-maintained switchbacks and shaded forest canopy"
+        ],
+        "description": "The beloved family-friendly sister peak to Mount Si. Moderate switchbacks lead past gigantic moss-covered boulders to a gorgeous rocky summit looking out across the Snoqualmie Valley.",
+        "best_for": "Kids 6+, adventurous families, mountain summit views"
+    },
+    {
+        "name": "Mount Si Trail",
+        "location": "North Bend (I-90 Corridor)",
+        "distance_miles": 8.0,
+        "elevation_gain_ft": 3150,
+        "difficulty": "Strenuous",
+        "stroller_friendly": False,
+        "dog_friendly": True,
+        "pass_required": "Washington Discover Pass",
+        "coordinates": {"lat": 47.4884, "lng": -121.7231},
+        "map_url": "https://maps.google.com/?q=Mount+Si+Trailhead+North+Bend+WA",
+        "embed_map_url": "https://maps.google.com/maps?q=47.4884,-121.7231&z=14&output=embed",
+        "highlights": [
+            "Iconic Puget Sound peak with 3,150 ft vertical climb",
+            "Snag Flats wooden boardwalk halfway rest stop",
+            "Dramatic Haystack rock summit & Seattle skyline views on clear days"
+        ],
+        "description": "The iconic Pacific Northwest endurance test. A continuous climb through dense hemlock forest with panoramic views of the Snoqualmie Valley, Mount Rainier, and Seattle from the upper bench.",
+        "best_for": "Teens, seasoned hikers, big physical challenge"
     }
 ]

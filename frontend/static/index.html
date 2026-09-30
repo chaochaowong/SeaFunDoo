@@ -727,6 +727,7 @@
       trails.forEach((trail, idx) => {
         const pill = document.createElement('button');
         pill.className = `trail-pill ${idx === 0 ? 'active' : ''}`;
+        pill.dataset.trailName = trail.name;
         pill.textContent = trail.name.replace(" Trail", "").replace(" Perimeter", "");
         pill.onclick = () => selectTrail(trail);
         container.appendChild(pill);
@@ -746,11 +747,12 @@
 
     // Select and display trail in the left panel
     function selectTrail(trail) {
+      if (!trail) return;
       currentTrail = trail;
       
       // Update pills
       document.querySelectorAll('.trail-pill').forEach(pill => {
-        pill.classList.toggle('active', pill.textContent === trail.name.replace(" Trail", "").replace(" Perimeter", ""));
+        pill.classList.toggle('active', pill.dataset.trailName === trail.name);
       });
 
       // Update map view & popup
@@ -873,13 +875,28 @@
         loadingMsg.textContent = data.reply;
 
         // Automatically update the left panel map & facts when a trail is recommended
+        let targetTrail = null;
         if (data.recommended_trail) {
-          const targetTrail = trails.find(t => t.name.toLowerCase() === data.recommended_trail.toLowerCase());
-          if (targetTrail) {
-            selectTrail(targetTrail);
-            // Smoothly scroll the left panel to top so user sees the newly focused trail
-            document.querySelector('.left-panel').scrollTo({ top: 0, behavior: 'smooth' });
+          const recLower = data.recommended_trail.toLowerCase();
+          targetTrail = trails.find(t => t.name.toLowerCase() === recLower || recLower.includes(t.name.toLowerCase()) || t.name.toLowerCase().includes(recLower));
+        }
+
+        // If not directly found, scan the reply text for any trail names in trails database
+        if (!targetTrail && data.reply) {
+          const replyLower = data.reply.toLowerCase();
+          for (const t of trails) {
+            const clean = t.name.toLowerCase().replace(" trail", "").replace(" loop", "").replace(" perimeter", "");
+            if (replyLower.includes(t.name.toLowerCase()) || (clean.length > 5 && replyLower.includes(clean))) {
+              targetTrail = t;
+              break;
+            }
           }
+        }
+
+        if (targetTrail) {
+          selectTrail(targetTrail);
+          // Smoothly scroll the left panel to top so user sees the newly focused trail
+          document.querySelector('.left-panel').scrollTo({ top: 0, behavior: 'smooth' });
         }
       } catch (err) {
         loadingMsg.textContent = "Sorry, couldn't reach the agent right now. Please try again!";
